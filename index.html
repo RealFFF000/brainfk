@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Brainfuck Interpreter</title>
+    <style>
+      body {
+        background-color: #1a1b26;
+        color: #cfd2d9;
+        font-family: monospace;
+        font-size: 16px;
+        line-height: 1.5;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px;
+      }
+
+      h1 {
+        font-size: 2em;
+        margin-top: 0;
+      }
+
+      textarea {
+        display: block;
+        margin-bottom: 20px;
+        width: 100%;
+        height: 50%;
+        min-height: 200px;
+        background-color: #2d303e;
+        color: #cfd2d9;
+        border: none;
+        resize: none;
+      }
+
+      .output {
+        background-color: #2d303e;
+        color: #cfd2d9;
+        padding: 10px;
+        margin-bottom: 20px;
+        white-space: pre-wrap;
+      }
+
+      .memory {
+        display: flex;
+        flex-wrap: wrap;
+        background-color: #3a3f58;
+        padding: 10px;
+        margin-bottom: 20px;
+      }
+
+      .memory-cell {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #cfd2d9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8em;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+
+      .active {
+        background-color: #cfd2d9;
+        color: #2d303e;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #2d303e;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #cfd2d9;
+        border-radius: 5px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #a1a1a1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Brainfuck Interpreter</h1>
+      <textarea id="inputCode"></textarea>
+      <button id="runButton">Run</button>
+      <div id="resultContainer" class="output"></div>
+      <div id="memoryContainer" class="memory"></div>
+    </div>
+
+    <script>
+      window.onload = function () {
+        const memorySize = 3000;
+        let data = new Array(memorySize).fill(0);
+        let pointer = 0;
+        let displayMemory = false;
+
+        let inputCode = document.getElementById("inputCode");
+        let runButton = document.getElementById("runButton");
+        let resultContainer = document.getElementById("resultContainer");
+        let memoryContainer = document.getElementById("memoryContainer");
+
+        runButton.addEventListener("click", interpretCode);
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Shift") {
+            displayMemory = true;
+            updateMemoryDisplay();
+          }
+        });
+
+        document.addEventListener("keyup", function (event) {
+          if (event.key === "Shift") {
+            displayMemory = false;
+            updateMemoryDisplay();
+          }
+      });
+
+    function interpretCode() {
+      document.getElementById("runButton").remove();
+      const code = inputCode.value;
+      let output = "";
+      let loopStack = [];
+
+      for (let i = 0; i < code.length; i++) {
+        const char = code.charAt(i);
+
+        switch (char) {
+          case ">":
+            pointer++;
+            break;
+          case "<":
+            pointer--;
+            break;
+          case "+":
+            data[pointer]++;
+            break;
+          case "-":
+            data[pointer]--;
+            break;
+          case ".":
+            output += String.fromCharCode(data[pointer]);
+            break;
+          case ",":
+            data[pointer] = prompt("Input a character:").charCodeAt(0);
+            break;
+          case "[":
+            if (data[pointer] === 0) {
+              let loopCounter = 1;
+              while (loopCounter > 0) {
+                i++;
+                const loopChar = code.charAt(i);
+                if (loopChar === "[") {
+                  loopCounter++;
+                } else if (loopChar === "]") {
+                  loopCounter--;
+                }
+              }
+            } else {
+              loopStack.push(i);
+            }
+            break;
+          case "]":
+            if (data[pointer] !== 0) {
+              i = loopStack[loopStack.length - 1];
+            } else {
+              loopStack.pop();
+            }
+            break;
+          default:
+            break;
+        }
+      }
+
+      resultContainer.textContent = output;
+    }
+
+    function updateMemoryDisplay() {
+      memoryContainer.innerHTML = "";
+
+      for (let i = 0; i < data.length; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("memory-cell");
+        cell.textContent = data[i];
+
+        if (i === pointer) {
+          cell.classList.add("active");
+        }
+
+        if (!displayMemory) {
+          cell.classList.add("hidden");
+        }
+
+        memoryContainer.appendChild(cell);
+      }
+    }
+  };
+</script>
+</body>
+</html>
